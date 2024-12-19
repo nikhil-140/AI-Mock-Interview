@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Exam with Voice Input and Output</title>
+    <link rel="stylesheet" href="examPage.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Welcome to C++ Language</h1>
+        <div id="timer">Time Left: <span id="time">180</span> seconds</div>
+        <div id="questionContainer">
+            <!-- Questions will be loaded here dynamically -->
+        </div>
+
+        <!-- Submit Button -->
+        <button class="submit-btn" onclick="submitExam()">Submit</button>
+        
+        <!-- Download Certificate Button (Initially hidden) -->
+        <button id="downloadBtn" class="submit-btn" style="display:none;" onclick="downloadCertificate()">Download Certificate</button>
+
+        <div id="resultContainer">
+            <!-- Result will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Hidden certificate template -->
+    <div id="certificate" style="display:none;">
+        <div class="image-container">
+            <img src="AI_Mock_Interview_2[1].jpg" alt="Certificate of Participation" style="width: 100%;">
+            <div class="name-input">
+                <h2 style="position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #052363;" id="studentName"></h2>
+            </div>
+        </div>
+        <p hidden="text-align:center;">has successfully completed the C++ Language exam with a score of</p>
+        <h3 hidden="text-align:center;" id="studentScore"></h3>
+        <p hidden="text-align:center;">on <span id="examDate"></span></p>
+        <p hidden="text-align:center;">Issued by: Online Exam System</p>
+    </div>
+
+    <script>
+        let timeLeft = 180; // 180 seconds for the exam
+        let currentQuestions = []; // Store the current random questions globally
+
+        function startTimer() {
+            const timerElement = document.getElementById('time');
+
+            const countdown = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    submitExam(); // Automatically submit the exam when time is up
+                } else {
+                    timeLeft -= 1;
+                    timerElement.textContent = timeLeft;
+                }
+            }, 1000); // Decrease the time by 1 second (1000 ms)
+        }
+
+        const questionPool = [
+    {
+        question: "What is the difference between C and C++?",
+        keywords: ["object-oriented", "procedural", "classes", "encapsulation", "inheritance"]
+    },
+    {
+        question: "What is a class in C++?",
+        keywords: ["blueprint", "data members", "functions"]
+    },
+    {
+        question: "What is an object in C++?",
+        keywords: ["instance", "data", "behavior"]
+    },
+    {
+        question: "What are access specifiers in C++?",
+        keywords: ["public", "private", "protected", "visibility"]
+    },
+    {
+        question: "What is inheritance in C++?",
+        keywords: ["parent class", "child class", "base", "derived", "reusability"]
+    },
+    {
+        question: "Explain the concept of polymorphism in C++.",
+        keywords: ["runtime", "compile-time", "overloading", "overriding", "function"]
+    },
+    {
+        question: "What is the purpose of the constructor in a class?",
+        keywords: ["initialize", "default", "parameterized"]
+    },
+    {
+        question: "What is a destructor in C++?",
+        keywords: ["clean up", "memory", "deallocation"]
+    },
+    {
+        question: "What is function overloading?",
+        keywords: ["signature", "multiple", "methods"]
+    },
+    {
+        question: "What is operator overloading?",
+        keywords: ["custom", "operation", "syntax"]
+    },
+    {
+        question: "What is a template in C++?",
+        keywords: ["generic", "types", "reusability"]
+    },
+    {
+        question: "How do you handle exceptions in C++?",
+        keywords: ["try", "catch", "throw", "error"]
+    },
+    {
+        question: "What are the different types of constructors?",
+        keywords: ["copy"]
+    },
+    {
+        question: "What is a virtual function?",
+        keywords: ["override", "base", "derived"]
+    },
+    {
+        question: "What is the significance of the `this` pointer?",
+        keywords: ["current object", "instance", "method"]
+    },
+    {
+        question: "What is encapsulation?",
+        keywords: ["data hiding", "security", "private", "public"]
+    },
+    {
+        question: "What are member functions?",
+        keywords: ["methods", "behavior", "operations"]
+    },
+    {
+        question: "What is multiple inheritance, and how is it implemented?",
+        keywords: ["multiple", "parent", "classes"]
+    },
+    {
+        question: "What is a namespace in C++?",
+        keywords: ["scope", "identifier", "avoid conflict", "organize"]
+    },
+    {
+        question: "What is the Standard Template Library (STL)?",
+        keywords: ["library", "containers", "algorithms", "iterators"]
+    },
+    {
+        question: "Explain the use of `new` and `delete` in C++.",
+        keywords: ["dynamic allocation", "heap", "deallocation"]
+    },
+    {
+        question: "What are static members in a class?",
+        keywords: ["shared", "instance", "memory", "variable", "function"]
+    },
+    {
+        question: "How do you create a friend function?",
+        keywords: ["access", "private members", "non-member function"]
+    },
+    {
+        question: "What is a pure virtual function?",
+        keywords: ["abstract class", "interface"]
+    },
+    {
+        question: "What is the role of the `friend` keyword?",
+        keywords: ["access", "private", "non-member"]
+    },
+    {
+        question: "What is the difference between `struct` and `class` in C++?",
+        keywords: ["default", "public", "private"]
+    },
+    {
+        question: "What is dynamic binding?",
+        keywords: ["method"]
+    },
+    {
+        question: "How do you implement operator overloading for a class?",
+        keywords: ["syntax", "custom", "operation"]
+    },
+    {
+        question: "What is the use of the `const` keyword?",
+        keywords: ["constant", "read-only", "variable"]
+    },
+    {
+        question: "What is an abstract class?",
+        keywords: ["incomplete"]
+    },
+    {
+        question: "How do you create and use a pointer to an object?",
+        keywords: ["reference", "new", "delete"]
+    },
+    {
+        question: "What is the purpose of the `static_cast` operator?",
+        keywords: ["type", "conversion", "compile-time", "safe", "explicit"]
+    }
+];
+
+
+        function getRandomQuestions(pool, count) {
+            let shuffled = pool.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function loadRandomQuestions() {
+            currentQuestions = getRandomQuestions(questionPool, 5);
+            const container = document.getElementById('questionContainer');
+            currentQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.innerHTML = `
+                    <p>${index + 1}. ${q.question}</p>
+                    <div class="answers">
+                        <textarea id="answer${index + 1}" placeholder="Type your answer here..."></textarea>
+                        <button class="voice-btn" onclick="startDictation('answer${index + 1}')">Use Voice Input</button>
+                        <button class="voice-btn" onclick="speakText('${q.question}')">Read Question</button>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = 'en-US';
+            window.speechSynthesis.speak(speech);
+        }
+
+        function isAnswerCorrect(userAnswer, keywords) {
+            const loweredAnswer = userAnswer.toLowerCase();
+            return keywords.some(keyword => loweredAnswer.includes(keyword.toLowerCase()));
+        }
+
+        function submitExam() {
+            let score = 0;
+            const totalQuestions = currentQuestions.length;
+
+            currentQuestions.forEach((q, index) => {
+                const userAnswer = document.getElementById(`answer${index + 1}`).value.trim();
+                if (isAnswerCorrect(userAnswer, q.keywords)) {
+                    score += 1;
+                }
+            });
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `<h2>Your Score: ${score} / ${totalQuestions}</h2>`;
+
+            const studentName = prompt("Please enter your name for the certificate:");
+            let today = new Date();
+            let examDate = today.toLocaleDateString();
+
+            generateCertificate(studentName, score, examDate);
+
+            document.getElementById("downloadBtn").style.display = "inline-block"; // Show the download button
+        }
+
+        function generateCertificate(name, score, examDate) {
+            document.getElementById("studentName").innerText = name;
+            document.getElementById("studentScore").innerText = `${score}/10`;
+            document.getElementById("examDate").innerText = examDate;
+        }
+
+        function downloadCertificate() {
+            const certificate = document.getElementById('certificate');
+            certificate.style.display = 'block'; // Temporarily display certificate
+
+            const opt = {
+                margin: 1,
+                filename: `${document.getElementById("studentName").innerText}_Certificate.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(certificate).set(opt).save().then(() => {
+                certificate.style.display = 'none'; // Hide after generating PDF
+            });
+        }
+
+        function startDictation(id) {
+            if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                recognition.onstart = function () {
+                    console.log("Voice recognition started.");
+                };
+
+                recognition.onspeechend = function () {
+                    recognition.stop();
+                };
+
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById(id).value = transcript;
+                };
+
+                recognition.start();
+            } else {
+                alert("Speech Recognition not supported in this browser. Please use Chrome or Safari.");
+            }
+        }
+
+        window.onload = function() {
+            loadRandomQuestions();
+            startTimer();
+        };
+    </script>
+
+</body>
+</html>

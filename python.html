@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Exam with Voice Input and Output</title>
+    <link rel="stylesheet" href="examPage.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Welcome to Python Language</h1>
+        <div id="timer">Time Left: <span id="time">180</span> seconds</div>
+        <div id="questionContainer">
+            <!-- Questions will be loaded here dynamically -->
+        </div>
+
+        <!-- Submit Button -->
+        <button class="submit-btn" onclick="submitExam()">Submit</button>
+        
+        <!-- Download Certificate Button (Initially hidden) -->
+        <button id="downloadBtn" class="submit-btn" style="display:none;" onclick="downloadCertificate()">Download Certificate</button>
+
+        <div id="resultContainer">
+            <!-- Result will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Hidden certificate template -->
+    <div id="certificate" style="display:none;">
+        <div class="image-container">
+            <img src="AI_Mock_Interview_2[1].jpg" alt="Certificate of Participation" style="width: 100%;">
+            <div class="name-input">
+                <h2 style="position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #052363;" id="studentName"></h2>
+            </div>
+        </div>
+        <p hidden="text-align:center;">has successfully completed the Python Language exam with a score of</p>
+        <h3 hidden="text-align:center;" id="studentScore"></h3>
+        <p hidden="text-align:center;">on <span id="examDate"></span></p>
+        <p hidden="text-align:center;">Issued by: Online Exam System</p>
+    </div>
+
+    <script>
+        let timeLeft = 180; // 180 seconds for the exam
+        let currentQuestions = []; // Store the current random questions globally
+
+        function startTimer() {
+            const timerElement = document.getElementById('time');
+
+            const countdown = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    submitExam(); // Automatically submit the exam when time is up
+                } else {
+                    timeLeft -= 1;
+                    timerElement.textContent = timeLeft;
+                }
+            }, 1000); // Decrease the time by 1 second (1000 ms)
+        }
+
+        const questionPool = [
+    {
+        question: "What are Python's built-in data types?",
+        keywords: ["primitive types", "containers", "mapping", "mutable", "immutable"]
+    },
+    {
+        question: "What is the difference between lists and tuples in Python?",
+        keywords: ["mutability", "performance", "brackets vs. parentheses", "data structures"]
+    },
+    {
+        question: "How do you create a function in Python?",
+        keywords: ["`def` keyword", "parameter passing", "return statement", "arguments"]
+    },
+    {
+        question: "What is the purpose of the `self` keyword in Python?",
+        keywords: ["object instance", "class association", "method reference"]
+    },
+    {
+        question: "How can you handle exceptions in Python?",
+        keywords: ["error handling", "exceptions", "`try-except`", "cleanup code"]
+    },
+    {
+        question: "What is a lambda function in Python?",
+        keywords: ["inline function", "single expression", "anonymous functions"]
+    },
+    {
+        question: "What is list comprehension in Python?",
+        keywords: ["compact loops", "expression for lists", "syntactic sugar", "quick creation"]
+    },
+    {
+        question: "How do you read and write files in Python?",
+        keywords: ["file I/O", "`open()` function", "reading data", "writing output", "closing files"]
+    },
+    {
+        question: "What are Python decorators?",
+        keywords: ["function modification", "enhanced functionality", "wrapper syntax", "`@` prefix"]
+    },
+    {
+        question: "What is the difference between `deepcopy` and `shallow copy`?",
+        keywords: ["object duplication", "reference", "nested structures", "memory allocation"]
+    },
+    {
+        question: "How do you create a class in Python?",
+        keywords: ["class definition", "attributes", "methods", "object-oriented structure"]
+    },
+    {
+        question: "What is inheritance in Python?",
+        keywords: ["code reuse", "parent-child relationship", "method overriding"]
+    },
+    {
+        question: "What are modules and packages in Python?",
+        keywords: ["code organization", "file grouping", "`import` statement", "namespaces"]
+    },
+    {
+        question: "What is the purpose of the `__init__` method in a class?",
+        keywords: ["initialization", "constructor function", "object setup"]
+    },
+    {
+        question: "How do you convert a string to a list in Python?",
+        keywords: ["splitting strings", "delimiter usage", "list conversion"]
+    },
+    {
+        question: "What is a dictionary in Python?",
+        keywords: ["key-value pairing", "hashing", "mutable structure"]
+    },
+    {
+        question: "How do you sort a list in Python?",
+        keywords: ["ordering elements", "sorting methods", "ascending/descending order"]
+    },
+    {
+        question: "What are `*args` and `**kwargs` in function definitions?",
+        keywords: ["variable arguments", "parameter flexibility", "positional vs. keyword arguments"]
+    },
+    {
+        question: "How can you generate random numbers in Python?",
+        keywords: ["pseudo-random generation", "`random` module", "random seed"]
+    },
+    {
+        question: "What is the difference between `==` and `is` in Python?",
+        keywords: ["value vs. identity", "object comparison", "equality semantics"]
+    },
+    {
+        question: "How do you handle command-line arguments in Python?",
+        keywords: ["argument parsing", "`sys.argv`", "CLI inputs"]
+    },
+    {
+        question: "What is a generator in Python?",
+        keywords: ["iterators", "`yield` keyword", "memory efficiency", "lazy evaluation"]
+    },
+    {
+        question: "What is the purpose of the `with` statement?",
+        keywords: ["resource management", "automatic cleanup", "context control"]
+    },
+    {
+        question: "What are Python's built-in functions?",
+        keywords: ["standard library", "utility functions", "`len()`", "`print()`", "`type()`"]
+    },
+    {
+        question: "How do you merge two dictionaries in Python?",
+        keywords: ["dictionary combination", "key-value updates", "union operator"]
+    },
+    {
+        question: "What is the purpose of the `pass` statement?",
+        keywords: ["no-operation placeholder", "syntax", "structural filler"]
+    },
+    {
+        question: "What is multithreading in Python?",
+        keywords: ["concurrent execution", "`threading` module", "Global Interpreter Lock (GIL)"]
+    },
+    {
+        question: "How do you create a virtual environment in Python?",
+        keywords: ["isolated packages", "`venv` module", "project-specific dependencies"]
+    },
+    {
+        question: "What is the `map` function in Python?",
+        keywords: ["apply function", "iterable transformation", "functional programming"]
+    },
+    {
+        question: "What are comprehensions in Python?",
+        keywords: ["concise syntax", "list/set/dict generation", "optimized loops"]
+    },
+    {
+        question: "How do you remove duplicates from a list in Python?",
+        keywords: ["unique values", "conversion to set", "deduplication"]
+    }
+];
+
+
+        function getRandomQuestions(pool, count) {
+            let shuffled = pool.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function loadRandomQuestions() {
+            currentQuestions = getRandomQuestions(questionPool, 5);
+            const container = document.getElementById('questionContainer');
+            currentQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.innerHTML = `
+                    <p>${index + 1}. ${q.question}</p>
+                    <div class="answers">
+                        <textarea id="answer${index + 1}" placeholder="Type your answer here..."></textarea>
+                        <button class="voice-btn" onclick="startDictation('answer${index + 1}')">Use Voice Input</button>
+                        <button class="voice-btn" onclick="speakText('${q.question}')">Read Question</button>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = 'en-US';
+            window.speechSynthesis.speak(speech);
+        }
+
+        function isAnswerCorrect(userAnswer, keywords) {
+            const loweredAnswer = userAnswer.toLowerCase();
+            return keywords.some(keyword => loweredAnswer.includes(keyword.toLowerCase()));
+        }
+
+        function submitExam() {
+            let score = 0;
+            const totalQuestions = currentQuestions.length;
+
+            currentQuestions.forEach((q, index) => {
+                const userAnswer = document.getElementById(`answer${index + 1}`).value.trim();
+                if (isAnswerCorrect(userAnswer, q.keywords)) {
+                    score += 1;
+                }
+            });
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `<h2>Your Score: ${score} / ${totalQuestions}</h2>`;
+
+            const studentName = prompt("Please enter your name for the certificate:");
+            let today = new Date();
+            let examDate = today.toLocaleDateString();
+
+            generateCertificate(studentName, score, examDate);
+
+            document.getElementById("downloadBtn").style.display = "inline-block"; // Show the download button
+        }
+
+        function generateCertificate(name, score, examDate) {
+            document.getElementById("studentName").innerText = name;
+            document.getElementById("studentScore").innerText = `${score}/10`;
+            document.getElementById("examDate").innerText = examDate;
+        }
+
+        function downloadCertificate() {
+            const certificate = document.getElementById('certificate');
+            certificate.style.display = 'block'; // Temporarily display certificate
+
+            const opt = {
+                margin: 1,
+                filename: `${document.getElementById("studentName").innerText}_Certificate.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(certificate).set(opt).save().then(() => {
+                certificate.style.display = 'none'; // Hide after generating PDF
+            });
+        }
+
+        function startDictation(id) {
+            if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                recognition.onstart = function () {
+                    console.log("Voice recognition started.");
+                };
+
+                recognition.onspeechend = function () {
+                    recognition.stop();
+                };
+
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById(id).value = transcript;
+                };
+
+                recognition.start();
+            } else {
+                alert("Speech Recognition not supported in this browser. Please use Chrome or Safari.");
+            }
+        }
+
+        window.onload = function() {
+            loadRandomQuestions();
+            startTimer();
+        };
+    </script>
+
+</body>
+</html>

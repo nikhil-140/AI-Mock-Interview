@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Exam with Voice Input and Output</title>
+    <link rel="stylesheet" href="examPage.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Welcome to C Language</h1>
+        <div id="timer">Time Left: <span id="time">180</span> seconds</div>
+        <div id="questionContainer">
+            <!-- Questions will be loaded here dynamically -->
+        </div>
+
+        <!-- Submit Button -->
+        <button class="submit-btn" onclick="submitExam()">Submit</button>
+        
+        <!-- Download Certificate Button (Initially hidden) -->
+        <button id="downloadBtn" class="submit-btn" style="display:none;" onclick="downloadCertificate()">Download Certificate</button>
+
+        <div id="resultContainer">
+            <!-- Result will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Hidden certificate template -->
+    <div id="certificate" style="display:none;">
+        <div class="image-container">
+            <img src="AI_Mock_Interview_2[1].jpg" alt="Certificate of Participation" style="width: 100%;">
+            <div class="name-input">
+                <h2 style="position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #052363;" id="studentName"></h2>
+            </div>
+        </div>
+        <p hidden="text-align:center;">has successfully completed the C Language exam with a score of</p>
+        <h3 hidden="text-align:center;" id="studentScore"></h3>
+        <p hidden="text-align:center;">on <span id="examDate"></span></p>
+        <p hidden="text-align:center;">Issued by: Online Exam System</p>
+    </div>
+
+    <script>
+        let timeLeft = 180; // 180 seconds for the exam
+        let currentQuestions = []; // Store the current random questions globally
+
+        function startTimer() {
+            const timerElement = document.getElementById('time');
+
+            const countdown = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    submitExam(); // Automatically submit the exam when time is up
+                } else {
+                    timeLeft -= 1;
+                    timerElement.textContent = timeLeft;
+                }
+            }, 1000); // Decrease the time by 1 second (1000 ms)
+        }
+
+        const questionPool = [
+    {
+        question: "What is a pointer in C?",
+        keywords: ["pointer", "variable", "memory", "address"]
+    },
+    {
+        question: "Explain the difference between malloc() and calloc().",
+        keywords: ["malloc", "calloc", "memory", "allocation", "zero-initialized", "uninitialized"]
+    },
+    {
+        question: "What are the basic data types in C?",
+        keywords: ["int", "char", "float", "double", "data types"]
+    },
+    {
+        question: "What is the purpose of the #include directive?",
+        keywords: ["include", "directive", "contents", "file", "program"]
+    },
+    {
+        question: "What is the difference between struct and union in C?",
+        keywords: ["struct", "union", "memory", "share", "individual", "members"]
+    },
+    {
+        question: "How do you declare a function in C?",
+        keywords: ["function", "declare", "return type", "parameters", "prototype"]
+    },
+    {
+        question: "What is the purpose of the main() function in a C program?",
+        keywords: ["main", "entry point", "function", "program execution", "return"]
+    },
+    {
+        question: "What are the different storage classes in C?",
+        keywords: ["storage classes", "auto", "register", "static", "extern", "scope", "lifetime"]
+    },
+    {
+        question: "What is a syntax error in C?",
+        keywords: ["syntax", "error", "rules", "grammar", "compile", "language"]
+    },
+    {
+        question: "How do you comment in C code?",
+        keywords: ["comment", "single-line", "multi-line", "//", "/*", "explanation", "documentation"]
+    },
+    {
+        question: "What is a variable in C?",
+        keywords: ["variable", "name", "value", "memory", "data type", "identifier"]
+    },
+    {
+        question: "Explain the concept of recursion with an example.",
+        keywords: ["recursion", "function", "call", "base case", "recursive case", "example"]
+    },
+    {
+        question: "What are arrays in C?",
+        keywords: ["array", "index", "element", "size", "data type", "collection"]
+    },
+    {
+        question: "What is a string in C?",
+        keywords: ["string", "character array", "null-terminated", "text", "array of chars"]
+    },
+    {
+        question: "What is the use of the sizeof() operator?",
+        keywords: ["sizeof", "operator", "memory", "bytes", "size", "data type"]
+    },
+    {
+        question: "What is the purpose of return in a function?",
+        keywords: ["return", "function", "exit", "value", "result"]
+    },
+    {
+        question: "How do you create a multi-dimensional array in C?",
+        keywords: ["multi-dimensional array", "rows", "columns", "matrix", "declare"]
+    },
+    {
+        question: "What is the difference between == and = in C?",
+        keywords: ["==", "=", "comparison", "assignment", "operator", "value"]
+    },
+    {
+        question: "Explain how to pass parameters to a function.",
+        keywords: ["parameters", "function", "arguments", "pass by value", "pass by reference"]
+    },
+    {
+        question: "What is a compiler in C?",
+        keywords: ["compiler", "convert", "source code", "machine code", "errors", "executable"]
+    },
+    {
+        question: "What are the four types of operators in C?",
+        keywords: ["operators", "arithmetic", "relational", "logical", "bitwise", "types"]
+    },
+    {
+        question: "How do you handle errors in C?",
+        keywords: ["error", "handling", "return", "errno", "exit", "failure"]
+    },
+    {
+        question: "What is the purpose of the break statement?",
+        keywords: ["break", "statement", "exit", "loop", "switch", "immediately"]
+    },
+    {
+        question: "What is the continue statement used for?",
+        keywords: ["continue", "statement", "skip", "iteration", "loop", "condition"]
+    },
+    {
+        question: "What are header files in C?",
+        keywords: ["header file", "library", "preprocessor", "#include", "functions", "definitions"]
+    },
+    {
+        question: "What is a preprocessor directive?",
+        keywords: ["preprocessor", "directive", "macro", "compile-time", "process", "#include", "#define"]
+    },
+    {
+        question: "Explain the use of the void keyword.",
+        keywords: ["void", "keyword", "no return", "function", "no arguments"]
+    },
+    {
+        question: "What is dynamic memory allocation?",
+        keywords: ["dynamic", "memory", "allocation", "heap", "malloc", "free", "calloc"]
+    },
+    {
+        question: "How do you use the switch statement in C?",
+        keywords: ["switch", "statement", "case", "break", "default", "condition", "branch"]
+    },
+    {
+        question: "What is a local variable?",
+        keywords: ["local", "variable", "scope", "function", "block", "limited"]
+    },
+    {
+        question: "What is the purpose of the static keyword?",
+        keywords: ["static", "keyword", "lifetime", "local", "global", "persistent"]
+    },
+    {
+        question: "How do you read input from the user in C?",
+        keywords: ["input", "user", "scanf", "gets", "keyboard", "read"]
+    },
+    {
+        question: "What is the printf() function used for?",
+        keywords: ["printf", "function", "output", "format", "print", "screen"]
+    }
+];
+
+
+        function getRandomQuestions(pool, count) {
+            let shuffled = pool.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function loadRandomQuestions() {
+            currentQuestions = getRandomQuestions(questionPool, 5);
+            const container = document.getElementById('questionContainer');
+            currentQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.innerHTML = `
+                    <p>${index + 1}. ${q.question}</p>
+                    <div class="answers">
+                        <textarea id="answer${index + 1}" placeholder="Type your answer here..."></textarea>
+                        <button class="voice-btn" onclick="startDictation('answer${index + 1}')">Use Voice Input</button>
+                        <button class="voice-btn" onclick="speakText('${q.question}')">Read Question</button>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = 'en-US';
+            window.speechSynthesis.speak(speech);
+        }
+
+        function isAnswerCorrect(userAnswer, keywords) {
+            const loweredAnswer = userAnswer.toLowerCase();
+            return keywords.some(keyword => loweredAnswer.includes(keyword.toLowerCase()));
+        }
+
+        function submitExam() {
+            let score = 0;
+            const totalQuestions = currentQuestions.length;
+
+            currentQuestions.forEach((q, index) => {
+                const userAnswer = document.getElementById(`answer${index + 1}`).value.trim();
+                if (isAnswerCorrect(userAnswer, q.keywords)) {
+                    score += 1;
+                }
+            });
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `<h2>Your Score: ${score} / ${totalQuestions}</h2>`;
+
+            const studentName = prompt("Please enter your name for the certificate:");
+            let today = new Date();
+            let examDate = today.toLocaleDateString();
+
+            generateCertificate(studentName, score, examDate);
+
+            document.getElementById("downloadBtn").style.display = "inline-block"; // Show the download button
+        }
+
+        function generateCertificate(name, score, examDate) {
+            document.getElementById("studentName").innerText = name;
+            document.getElementById("studentScore").innerText = `${score}/10`;
+            document.getElementById("examDate").innerText = examDate;
+        }
+
+        function downloadCertificate() {
+            const certificate = document.getElementById('certificate');
+            certificate.style.display = 'block'; // Temporarily display certificate
+
+            const opt = {
+                margin: 1,
+                filename: `${document.getElementById("studentName").innerText}_Certificate.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(certificate).set(opt).save().then(() => {
+                certificate.style.display = 'none'; // Hide after generating PDF
+            });
+        }
+
+        function startDictation(id) {
+            if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                recognition.onstart = function () {
+                    console.log("Voice recognition started.");
+                };
+
+                recognition.onspeechend = function () {
+                    recognition.stop();
+                };
+
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById(id).value = transcript;
+                };
+
+                recognition.start();
+            } else {
+                alert("Speech Recognition not supported in this browser. Please use Chrome or Safari.");
+            }
+        }
+
+        window.onload = function() {
+            loadRandomQuestions();
+            startTimer();
+        };
+    </script>
+
+</body>
+</html>

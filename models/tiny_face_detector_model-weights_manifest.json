@@ -1,0 +1,49 @@
+{
+    "camera_module": {
+        "resolution": {
+            "width": 1280,
+            "height": 720
+        },
+        "frame_rate": 30,
+        "settings": {
+            "brightness": 50,
+            "contrast": 50,
+            "saturation": 50,
+            "sharpness": 25,
+            "exposure": "auto"
+        },
+        "face_detection": {
+            "enabled": true,
+            "detection_interval": 500, 
+            "min_face_size": {
+                "width": 50,
+                "height": 50
+            },
+            "max_face_size": {
+                "width": 500,
+                "height": 500
+            }
+        },
+        "motion_detection": {
+            "enabled": true,
+            "sensitivity": 0.5, 
+            "detection_area": {
+                "top_left": {
+                    "x": 0,
+                    "y": 0
+                },
+                "bottom_right": {
+                    "x": 1280,
+                    "y": 720
+                }
+            }
+        },
+        "recording": {
+            "enabled": true,
+            "format": "mp4",
+            "path": "/recordings/",
+            "max_duration": 1800,  
+            "loop_recording": true
+        }
+    }
+}

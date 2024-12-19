@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Certificate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+    *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #0a0a0a;
+    font-family: 'Great Vibes';
+}
+
+.image-container {
+    position: relative;
+    width: 90%; /* Adjust to make responsive */
+    max-width: 800px;
+    margin: auto;
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Positioning the input field over the image */
+.name-input {
+    position: absolute;
+    top: 45%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+}
+
+.name-input input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-bottom: 2px solid #000;
+    background-color: transparent;
+    font-size: 36px;
+    text-align: center;
+    font-family: 'Great Vibes';
+    color: #052363;
+    
+    outline: none;
+}
+    </style>
+</head>
+<body>
+    <div class="image-container">
+        <img src="AI_Mock_Interview_2[1].jpg" alt="Certificate of Participation">
+        <div class="name-input">
+            <input type="text" id="nameInput" >
+        </div>
+    </div>
+</body>
+</html>

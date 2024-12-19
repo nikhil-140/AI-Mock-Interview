@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Exam with Voice Input and Output</title>
+    <link rel="stylesheet" href="examPage.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Welcome to JavaScript Language</h1>
+        <div id="timer">Time Left: <span id="time">180</span> seconds</div>
+        <div id="questionContainer">
+            <!-- Questions will be loaded here dynamically -->
+        </div>
+
+        <!-- Submit Button -->
+        <button class="submit-btn" onclick="submitExam()">Submit</button>
+        
+        <!-- Download Certificate Button (Initially hidden) -->
+        <button id="downloadBtn" class="submit-btn" style="display:none;" onclick="downloadCertificate()">Download Certificate</button>
+
+        <div id="resultContainer">
+            <!-- Result will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Hidden certificate template -->
+    <div id="certificate" style="display:none;">
+        <div class="image-container">
+            <img src="AI_Mock_Interview_2[1].jpg" alt="Certificate of Participation" style="width: 100%;">
+            <div class="name-input">
+                <h2 style="position: absolute; top: 32%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #052363;" id="studentName"></h2>
+            </div>
+        </div>
+        <p hidden="text-align:center;">has successfully completed the JavaScript Language exam with a score of</p>
+        <h3 hidden="text-align:center;" id="studentScore"></h3>
+        <p hidden="text-align:center;">on <span id="examDate"></span></p>
+        <p hidden="text-align:center;">Issued by: Online Exam System</p>
+    </div>
+
+    <script>
+        let timeLeft = 180; // 180 seconds for the exam
+        let currentQuestions = []; // Store the current random questions globally
+
+        function startTimer() {
+            const timerElement = document.getElementById('time');
+
+            const countdown = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    submitExam(); // Automatically submit the exam when time is up
+                } else {
+                    timeLeft -= 1;
+                    timerElement.textContent = timeLeft;
+                }
+            }, 1000); // Decrease the time by 1 second (1000 ms)
+        }
+
+        const questionPool = [
+    {
+        question: "What is the difference between `var`, `let`, and `const`?",
+        keywords: ["scope", "block-level", "global scope", "redeclaration limitations"]
+    },
+    {
+        question: "How do you create a function in JavaScript?",
+        keywords: ["declaration syntax", "expression syntax", "arrow functions"]
+    },
+    {
+        question: "What are arrow functions, and how do they differ from regular functions?",
+        keywords: ["lexical `this`", "concise syntax", "behavior difference"]
+    },
+    {
+        question: "What is the purpose of the `this` keyword in JavaScript?",
+        keywords: ["execution context", "method calling object", "lexical scoping"]
+    },
+    {
+        question: "What is a closure in JavaScript?",
+        keywords: ["access variables", "outer function scope", "encapsulation"]
+    },
+    {
+        question: "How do you handle asynchronous code in JavaScript?",
+        keywords: ["callbacks", "promise chaining", "async/await"]
+    },
+    {
+        question: "What are promises, and how do they work?",
+        keywords: ["resolve value", "error handling", "chained callbacks"]
+    },
+    {
+        question: "What is the difference between `==` and `===`?",
+        keywords: ["type coercion", "loose equality", "strict equality"]
+    },
+    {
+        question: "What is an event loop in JavaScript?",
+        keywords: ["handling asynchronous operations", "call stack", "task queue"]
+    },
+    {
+        question: "How do you create an object in JavaScript?",
+        keywords: ["object literal", "constructor function", "prototype-based"]
+    },
+    {
+        question: "What is prototypal inheritance?",
+        keywords: ["object prototype", "inheritance chain", "method sharing"]
+    },
+    {
+        question: "What are JavaScript modules?",
+        keywords: ["encapsulation", "import/export", "code reuse"]
+    },
+    {
+        question: "How can you manipulate the DOM using JavaScript?",
+        keywords: ["select elements", "create elements", "modify structure"]
+    },
+    {
+        question: "What is the purpose of the `bind`, `call`, and `apply` methods?",
+        keywords: ["context binding", "`this` control", "method invocation"]
+    },
+    {
+        question: "What is a callback function?",
+        keywords: ["function argument", "execute later", "asynchronous handling"]
+    },
+    {
+        question: "How do you declare an array in JavaScript?",
+        keywords: ["square bracket syntax", "indexed collection", "storing multiple values"]
+    },
+    {
+        question: "What is the `map` function, and how does it work?",
+        keywords: ["transform array", "callback function", "return modified array"]
+    },
+    {
+        question: "What are template literals?",
+        keywords: ["string interpolation", "backticks", "multi-line strings"]
+    },
+    {
+        question: "How can you check if a variable is an array?",
+        keywords: ["Array.isArray()", "instanceof Array", "data type check"]
+    },
+    {
+        question: "What is event delegation?",
+        keywords: ["parent element handler", "event bubbling", "efficient event management"]
+    },
+    {
+        question: "What is the difference between `null` and `undefined`?",
+        keywords: ["absence of value", "uninitialized state", "type differences"]
+    },
+    {
+        question: "How do you create a promise in JavaScript?",
+        keywords: ["Promise constructor", "async operation", "resolve/reject"]
+    },
+    {
+        question: "What is the purpose of the `async` and `await` keywords?",
+        keywords: ["handle promises", "asynchronous readability", "synchronous-like flow"]
+    },
+    {
+        question: "What are the different types of loops in JavaScript?",
+        keywords: ["for loop", "while loop", "do-while loop", "iteration control"]
+    },
+    {
+        question: "How can you prevent the default action of an event?",
+        keywords: ["preventDefault()", "stop default behavior", "event control"]
+    },
+    {
+        question: "What is local storage and session storage?",
+        keywords: ["persistent data", "session lifespan", "client-side storage"]
+    },
+    {
+        question: "How do you perform deep cloning of an object?",
+        keywords: ["copy object", "JSON methods", "recursion for nested objects"]
+    },
+    {
+        question: "What is the purpose of the `forEach` method?",
+        keywords: ["iterate array", "callback execution", "perform action on each item"]
+    },
+    {
+        question: "How do you handle errors in JavaScript?",
+        keywords: ["error handling", "try-catch blocks", "throw exceptions"]
+    },
+    {
+        question: "What is the significance of `JSON` in JavaScript?",
+        keywords: ["data format", "object notation", "parse and stringify methods"]
+    },
+    {
+        question: "What are higher-order functions?",
+        keywords: ["function as argument", "returns function", "functional programming"]
+    },
+    {
+        question: "How do you make an HTTP request using JavaScript?",
+        keywords: ["fetch API", "XMLHttpRequest", "AJAX", "network request"]
+    }
+];
+
+
+        function getRandomQuestions(pool, count) {
+            let shuffled = pool.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function loadRandomQuestions() {
+            currentQuestions = getRandomQuestions(questionPool, 5);
+            const container = document.getElementById('questionContainer');
+            currentQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.innerHTML = `
+                    <p>${index + 1}. ${q.question}</p>
+                    <div class="answers">
+                        <textarea id="answer${index + 1}" placeholder="Type your answer here..."></textarea>
+                        <button class="voice-btn" onclick="startDictation('answer${index + 1}')">Use Voice Input</button>
+                        <button class="voice-btn" onclick="speakText('${q.question}')">Read Question</button>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = 'en-US';
+            window.speechSynthesis.speak(speech);
+        }
+
+        function isAnswerCorrect(userAnswer, keywords) {
+            const loweredAnswer = userAnswer.toLowerCase();
+            return keywords.some(keyword => loweredAnswer.includes(keyword.toLowerCase()));
+        }
+
+        function submitExam() {
+            let score = 0;
+            const totalQuestions = currentQuestions.length;
+
+            currentQuestions.forEach((q, index) => {
+                const userAnswer = document.getElementById(`answer${index + 1}`).value.trim();
+                if (isAnswerCorrect(userAnswer, q.keywords)) {
+                    score += 1;
+                }
+            });
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `<h2>Your Score: ${score} / ${totalQuestions}</h2>`;
+
+            const studentName = prompt("Please enter your name for the certificate:");
+            let today = new Date();
+            let examDate = today.toLocaleDateString();
+
+            generateCertificate(studentName, score, examDate);
+
+            document.getElementById("downloadBtn").style.display = "inline-block"; // Show the download button
+        }
+
+        function generateCertificate(name, score, examDate) {
+            document.getElementById("studentName").innerText = name;
+            document.getElementById("studentScore").innerText = `${score}/10`;
+            document.getElementById("examDate").innerText = examDate;
+        }
+
+        function downloadCertificate() {
+            const certificate = document.getElementById('certificate');
+            certificate.style.display = 'block'; // Temporarily display certificate
+
+            const opt = {
+                margin: 1,
+                filename: `${document.getElementById("studentName").innerText}_Certificate.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(certificate).set(opt).save().then(() => {
+                certificate.style.display = 'none'; // Hide after generating PDF
+            });
+        }
+
+        function startDictation(id) {
+            if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                recognition.onstart = function () {
+                    console.log("Voice recognition started.");
+                };
+
+                recognition.onspeechend = function () {
+                    recognition.stop();
+                };
+
+                recognition.onresult = function (event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById(id).value = transcript;
+                };
+
+                recognition.start();
+            } else {
+                alert("Speech Recognition not supported in this browser. Please use Chrome or Safari.");
+            }
+        }
+
+        window.onload = function() {
+            loadRandomQuestions();
+            startTimer();
+        };
+    </script>
+
+</body>
+</html>
